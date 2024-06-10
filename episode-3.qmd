@@ -66,15 +66,30 @@ geom_raster(data = DTM_hill_HARV_df,
 ```
 
 ```{r}
-DTM_hill_UTM <- project(DTM_hill_HARV, 
+DTM_hill_UTMZ18N_HARV <- project(DTM_hill_HARV, 
                         crs(DTM_HARV))
-DTM_hill_UTM
-
+DTM_hill_UTMZ18N_HARV
 
 ```
+## Check the spatial resolution
 
 ```{r}
-DTM_hill_UTM_df <- as.data.frame(DTM_hill_UTM, xy=TRUE)
+res(DTM_hill_UTMZ18N_HARV)
+res(DTM_HARV)
+```
+
+Not the same!
+
+```{r}
+DTM_hill_UTMZ18N_HARV <- project(DTM_hill_HARV, 
+                                   crs(DTM_HARV), 
+                                   res = res(DTM_HARV))
+```
+
+
+
+```{r}
+DTM_hill_UTM_df <- as.data.frame(DTM_hill_UTMZ18N_HARV, xy=TRUE)
 ```
 
 ```{r}
@@ -87,5 +102,12 @@ ggplot() +
                    alpha = HARV_DTMhill_WGS84)) +
      scale_fill_gradientn(name = "Elevation", colors = terrain.colors(10)) + 
      coord_quickmap()
+```
+
+Actually you can even do better, match project, resolution and extent in one command:
+
+```{r}
+DTM_hill_UTMZ18N_HARV <- project(DTM_hill_HARV, DTM_HARV)
+DTM_hill_UTMZ18N_HARV
 ```
 
