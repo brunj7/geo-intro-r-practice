@@ -1,0 +1,153 @@
+---
+title: "episode-2"
+format: html
+---
+
+```{r}
+library(tidyverse)
+library(terra)
+```
+Loading the raster
+
+```{r}
+DSM_HARV <- rast("data/NEON-DS-Airborne-Remote-Sensing/HARV/DSM/HARV_dsmCrop.tif")
+
+DSM_HARV
+```
+
+Transform raster. into a dataframe
+
+```{r}
+DSM_HARV_df <- as.data.frame(DSM_HARV, xy = TRUE)
+```
+
+Quick plot to check things
+
+```{r}
+ggplot() +
+    geom_raster(data = DSM_HARV_df , aes(x = x, y = y, fill = HARV_dsmCrop)) +
+    scale_fill_viridis_c() +
+    coord_quickmap()
+```
+create the column with the binned categories
+
+```{r}
+DSM_HARV_df <- DSM_HARV_df %>%
+                mutate(fct_elevation = cut(HARV_dsmCrop, breaks = 3))
+```
+
+Let's check this
+
+```{r}
+ggplot() +
+    geom_bar(data = DSM_HARV_df, aes(fct_elevation))
+```
+
+Check the distribution of those bins:
+
+```{r}
+unique(DSM_HARV_df$fct_elevation)
+```
+
+```{r}
+DSM_HARV_df %>%
+        group_by(fct_elevation) %>%
+        count()
+```
+
+Those numbers might not be the best to use, so we might what to customize those threshold values
+
+
+```{r}
+custom_bins <- c(300, 350, 400, 450)
+
+DSM_HARV_df <- DSM_HARV_df %>%
+  mutate(fct_elevation_2 = cut(HARV_dsmCrop, breaks = custom_bins))
+
+unique(DSM_HARV_df$fct_elevation_2)
+```
+
+Let's have a look at the distribution
+
+```{r}
+ggplot() +
+  geom_bar(data = DSM_HARV_df, aes(fct_elevation_2))
+```
+
+```{r}
+DSM_HARV_df %>%
+  count(fct_elevation_2) 
+```
+
+Ok let's use this in a plot:
+
+```{r}
+ggplot() +
+  geom_raster(data = DSM_HARV_df , aes(x = x, y = y, fill = fct_elevation_2)) + 
+  coord_quickmap()
+```
+
+OK the color are not optimal for elevation
+
+```{r}
+ggplot() +
+ geom_raster(data = DSM_HARV_df , aes(x = x, y = y,
+                                      fill = fct_elevation_2)) + 
+    scale_fill_manual(values = terrain.colors(3)) + 
+    coord_quickmap()
+```
+
+OK let's keep improving the formatting
+
+
+```{r}
+my_col <- terrain.colors(3)
+
+ggplot() +
+ geom_raster(data = DSM_HARV_df , aes(x = x, y = y,
+                                      fill = fct_elevation_2)) + 
+  scale_fill_manual(values = my_col, name = "Elevation") + 
+  theme(axis.title = element_blank()) + 
+  coord_quickmap()
+```
+
+## Layering rasters
+
+DSM hillshade
+
+```{r}
+DSM_hill_HARV <-
+  rast("data/NEON-DS-Airborne-Remote-Sensing/HARV/DSM/HARV_DSMhill.tif")
+
+DSM_hill_HARV
+```
+
+```{r}
+DSM_hill_HARV_df <- as.data.frame(DSM_hill_HARV, xy = TRUE) 
+
+str(DSM_hill_HARV_df)
+```
+
+```{r}
+ggplot() +
+  geom_raster(data = DSM_hill_HARV_df,
+              aes(x = x, y = y, alpha = HARV_DSMhill)) + 
+  scale_alpha(range =  c(0.15, 0.65)) +  
+  coord_quickmap()
+```
+
+
+```{r}
+ggplot() +
+  geom_raster(data = DSM_hill_HARV_df,
+              aes(x = x, y = y,
+                  alpha = HARV_DSMhill)) +
+  geom_raster(data = DSM_HARV_df ,
+              aes(x = x, y = y,
+                  fill = HARV_dsmCrop,
+                  alpha = 0.6)) +
+  scale_fill_viridis_c() +  
+  scale_alpha(range = c(0.15, 0.65), guide = "none") +  
+  ggtitle("Elevation with hillshade") +
+  coord_quickmap()
+```

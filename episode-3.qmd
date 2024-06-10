@@ -1,0 +1,91 @@
+---
+title: "episode-3"
+format: html
+---
+
+```{r}
+library(tidyverse)
+library(sf)
+library(terra)
+```
+
+
+## Data types
+
+load the data
+
+```{r}
+DTM_HARV <- 
+    rast("data/NEON-DS-Airborne-Remote-Sensing/HARV/DTM/HARV_dtmCrop.tif")
+
+DTM_hill_HARV <- 
+    rast("data/NEON-DS-Airborne-Remote-Sensing/HARV/DTM/HARV_DTMhill_WGS84.tif")
+```
+
+Transform as data frames
+
+```{r}
+DTM_HARV_df <- as.data.frame(DTM_HARV, xy = TRUE)
+
+DTM_hill_HARV_df <- as.data.frame(DTM_hill_HARV, xy = TRUE)
+```
+
+Let's have a look at those data
+
+```{r}
+ggplot() +
+     geom_raster(data = DTM_HARV_df , 
+                 aes(x = x, y = y, 
+                  fill = HARV_dtmCrop)) + 
+     geom_raster(data = DTM_hill_HARV_df, 
+                 aes(x = x, y = y, 
+                   alpha = HARV_DTMhill_WGS84)) +
+     scale_fill_gradientn(name = "Elevation", colors = terrain.colors(10)) + 
+     coord_quickmap()
+```
+
+mmm what just happened!?
+
+Let's have a look at this seperatly
+
+```{r}
+ggplot() +
+geom_raster(data = DTM_HARV_df,
+    aes(x = x, y = y,
+    fill = HARV_dtmCrop)) +
+scale_fill_gradientn(name = "Elevation", colors = terrain.colors(10)) + 
+coord_quickmap()
+```
+
+```{r}
+ggplot() +
+geom_raster(data = DTM_hill_HARV_df,
+    aes(x = x, y = y,
+    alpha = HARV_DTMhill_WGS84)) + 
+    coord_quickmap()
+```
+
+```{r}
+DTM_hill_UTM <- project(DTM_hill_HARV, 
+                        crs(DTM_HARV))
+DTM_hill_UTM
+
+
+```
+
+```{r}
+DTM_hill_UTM_df <- as.data.frame(DTM_hill_UTM, xy=TRUE)
+```
+
+```{r}
+ggplot() +
+     geom_raster(data = DTM_HARV_df , 
+                 aes(x = x, y = y, 
+                  fill = HARV_dtmCrop)) + 
+     geom_raster(data = DTM_hill_UTM_df, 
+                 aes(x = x, y = y, 
+                   alpha = HARV_DTMhill_WGS84)) +
+     scale_fill_gradientn(name = "Elevation", colors = terrain.colors(10)) + 
+     coord_quickmap()
+```
+
